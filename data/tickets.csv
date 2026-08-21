@@ -1,0 +1,11 @@
+ticket_id,message,category,sentiment,urgency
+1,"My laptop screen is broken and I need urgent help.",technical,negative,high
+2,"I forgot my password and need to reset it.",account,neutral,medium
+3,"My package arrived two days late.",delivery,negative,medium
+4,"I was charged twice for the same order.",billing,negative,high
+5,"I want to cancel my subscription.",subscription,neutral,medium
+6,"Your support team was very helpful, thank you!",account,positive,low
+7,"The payment failed but money was deducted from my account.",billing,negative,high
+8,"I received my order early and everything looks great.",delivery,positive,low
+9,"The mobile app freezes when I upload a file.",technical,negative,high
+10,"How can I upgrade my subscription plan?",subscription,neutral,low
