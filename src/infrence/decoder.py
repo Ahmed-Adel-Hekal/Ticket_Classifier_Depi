@@ -76,3 +76,18 @@ def select_next_token(logits, temp) :
     prob = torch.softmax(logits, dim = -1)
 
     return torch.multinomial(prob, num_samples=1)
+
+
+# unbelivable
+
+
+
+def apply_logit_bias(logits: torch.tensor,
+                     token_bias:dict[int,float]) ->torch.Tensor : 
+
+
+    logits = logits.clone()
+
+    for token_id, bias in token_bias.items()  :
+        logits[token_id] += bias
+    return logits

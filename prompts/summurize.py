@@ -4,9 +4,9 @@ def build_ticket_classifier(
         user_query
 ):
     return build_prompt(
-        role="You are a precise ticket classification assistant.",
+        role="You are Text summurizer.",
 
-        task="Classify the customer ticket.",
+        task="Summurize customer ticket.",
 
         user_input=user_query,
 

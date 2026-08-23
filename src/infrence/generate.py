@@ -2,13 +2,14 @@ import torch
 
 from .model import get_model_device
 from .decoder import (
+    apply_logit_bias,
     apply_temperature,
     apply_top_k,
     apply_top_p,
     select_next_token,
 )
 from .tokinezer import tokenize
-
+from .stopping import StopSequenceDetector
 
 @torch.no_grad()
 def generate_text(
@@ -19,6 +20,7 @@ def generate_text(
     temperature=1.0,
     top_k=None,
     top_p=None,
+    stop_sequence=None
 ):
 
 
@@ -63,6 +65,20 @@ def generate_text(
 
         # Update KV cache
         past_key_values = outputs.past_key_values
+
+        # # stop_seq ---> token id 
+        stop_sequence_token = []
+
+        for s in stop_sequence :
+            token_id = tokenizer.encode(
+                s,
+                add_special_tokens=False
+            )
+
+            if token_id :
+                stop_sequence_token.append(token_id)
+
+        stop_detector= StopSequenceDetector(stop_sequence_token)
 
         # Apply decoding strategies
         next_token_logits = apply_temperature(
@@ -115,6 +131,13 @@ def generate_text(
             ],
             dim=-1,
         )
+
+        # generated_idx = input_ids[0,prompt_length:,]
+
+        # stop_flag = stop_sequence.match(generated_idx)
+
+        # if stop_flag > 0 : 
+        #     break 
 
 
     generated_ids = input_ids[:, prompt_length:]
