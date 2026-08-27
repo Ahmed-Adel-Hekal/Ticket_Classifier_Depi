@@ -8,3 +8,5 @@ matplotlib
 sentencepiece
 dotenv
 outlines
+pytest
+
