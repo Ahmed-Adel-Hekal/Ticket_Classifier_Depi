@@ -14,5 +14,6 @@ def build_ticket_classifier(
             "Return only the requested result.",
             "Do not provide explanations.",
             "Do not use markdown.",
+            "summary must be one sentence as max"
         ],
     )
