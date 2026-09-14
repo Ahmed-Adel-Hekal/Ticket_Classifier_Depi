@@ -1,93 +1,51 @@
 import torch
 
-def apply_temperature(logit, temp) : 
-    if temp <=0 :
-        return logit
-    return logit/temp
 
-def apply_top_k(logits, top_k) :
-    if top_k is None  or top_k <= 0 :
+def apply_temperature(logits: torch.Tensor, temperature: float) -> torch.Tensor:
+    if temperature < 0:
+        raise ValueError("temperature must be >= 0")
+    if temperature == 0:
         return logits
+    return logits / temperature
 
-    top_k = min(top_k, logits.size(-1))
 
-    values, _ = torch.topk(logits, top_k)
-    #  [[9,8,7]]
-    threshold = values[:,-1].unsqueeze(-1)
-
-    logits = logits.masked_fill(
-        logits < threshold,
-        float('-inf')
-    )
-
-    return logits
-
-def apply_top_p(logits, top_p) :
-
-    if top_p is None or top_p>= 1.0 : 
+def apply_top_k(logits: torch.Tensor, top_k: int | None) -> torch.Tensor:
+    if top_k is None:
         return logits
+    if top_k < 1:
+        raise ValueError("top_k must be >= 1")
+    k = min(top_k, logits.shape[-1])
+    threshold = torch.topk(logits, k=k, dim=-1).values[..., -1, None]
+    return logits.masked_fill(logits < threshold, float("-inf"))
 
-    if not 0.0 < top_p <= 1.0 : 
-        raise ValueError("top_p must be between 0 and 1.")
 
-    # [batch_size, seq_len, vocab_size]
+def apply_top_p(logits: torch.Tensor, top_p: float | None) -> torch.Tensor:
+    if top_p is None:
+        return logits
+    if not 0 < top_p <= 1:
+        raise ValueError("top_p must be in (0, 1]")
+    sorted_logits, sorted_indices = torch.sort(logits, descending=True, dim=-1)
+    sorted_probs = torch.softmax(sorted_logits, dim=-1)
+    cumulative_probs = torch.cumsum(sorted_probs, dim=-1)
+    remove = cumulative_probs > top_p
+    remove[..., 1:] = remove[..., :-1].clone()
+    remove[..., 0] = False
+    indices_to_remove = torch.zeros_like(remove).scatter(-1, sorted_indices, remove)
+    return logits.masked_fill(indices_to_remove, float("-inf"))
 
-    # [i , love , to , eat]
-    # [.1, .7,   .3  , .6]
-    # [.7  .6 .3 .1]  --> sorted logits
-    # [1, 3, 2, 0]   --> sorted indices
-    # [.6  .3 .1  .1 ]
-    # [.6  .9  1.0  1.1]
 
-    sorted_logits , sorted_indices = torch.sort(logits, descending=True, dim=-1)
-
-    sorted_prob = torch.softmax(sorted_logits, dim=-1)
-# [4]
-    cumulative_prop = torch.cumsum(sorted_prob, dim= -1)
-
-    sorted_indices_to_remove = cumulative_prop > top_p
-
-    sorted_indices_to_remove[...,1:] = (sorted_indices_to_remove[...,:-1].clone())
-
-    sorted_indices_to_remove[..., 0] = False
-
-    indices_to_remove = torch.zeros_like(
-        logits,
-        dtype= torch.bool
-    )
-
-    indices_to_remove.scatter_(
-        dim=-1,
-        index = sorted_indices,
-        src = sorted_indices_to_remove
-    )
-
-    logits = logits.masked_fill(
-        indices_to_remove,
-        float('-inf')
-    )
-
-    return logits
-
-def select_next_token(logits, temp) : 
-    if temp == 0 :
+def select_next_token(logits: torch.Tensor, temperature: float) -> torch.Tensor:
+    if temperature == 0:
         return torch.argmax(logits, dim=-1, keepdim=True)
-
-    prob = torch.softmax(logits, dim = -1)
-
-    return torch.multinomial(prob, num_samples=1)
+    probabilities = torch.softmax(logits, dim=-1)
+    return torch.multinomial(probabilities, num_samples=1)
 
 
-# unbelivable
-
-
-
-def apply_logit_bias(logits: torch.tensor,
-                     token_bias:dict[int,float]) ->torch.Tensor : 
-
-
-    logits = logits.clone()
-
-    for token_id, bias in token_bias.items()  :
-        logits[token_id] += bias
-    return logits
+def apply_logit_bias(logits: torch.Tensor, token_bias: dict[int, float]) -> torch.Tensor:
+    result = logits.clone()
+    vocabulary_size = result.shape[-1]
+    for token_id, bias in token_bias.items():
+        if not 0 <= token_id < vocabulary_size:
+            raise ValueError(f"token_id out of range: {token_id}")
+        result[..., token_id] += bias
+    return result

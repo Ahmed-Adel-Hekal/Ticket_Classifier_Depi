@@ -1,14 +1,16 @@
-from pydantic import ValidationError
 import json
+from pydantic import ValidationError
 from .schemas import TicketOutput
-def parse_and_validate_ticket(raw_output:str) : 
-    try : 
+
+
+def parse_and_validate_ticket(raw_output: str) -> TicketOutput:
+    if not isinstance(raw_output, str) or not raw_output.strip():
+        raise ValueError("model output must be a non-empty string")
+    try:
         data = json.loads(raw_output)
-        ticket = TicketOutput.model_validate(data)
-        return ticket
-
-    except json.JSONDecodeError :
-        raise ValueError("Model output is not valid JSON")
-
-    except ValidationError : 
-        raise ValueError ('MODEL output does not match ticket')
+    except json.JSONDecodeError as exc:
+        raise ValueError("model output is not valid JSON") from exc
+    try:
+        return TicketOutput.model_validate(data)
+    except ValidationError as exc:
+        raise ValueError("model output does not match TicketOutput") from exc

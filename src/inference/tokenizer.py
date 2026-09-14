@@ -1,6 +1,3 @@
-import torch
-
-def tokenize(tokenizer, text, device) :
-    input = tokenizer(text, return_tensors='pt')
-
-    return {key :value.to(device) for key, value in input.items() }
+def tokenize(tokenizer, text: str, device):
+    encoded = tokenizer(text, return_tensors="pt")
+    return {key: value.to(device) for key, value in encoded.items()}
