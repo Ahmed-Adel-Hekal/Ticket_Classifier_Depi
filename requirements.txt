@@ -1,12 +1,8 @@
-transformers
-torch
-accelerate
-pydantic
-pandas
-numpy 
-matplotlib
-sentencepiece
-dotenv
-outlines
-pytest
-
+openai>=1.0.0
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+pytest>=7.0.0
+# Optional local inference dependencies:
+# torch>=2.0.0
+# transformers>=4.35.0
+# accelerate>=0.24.0

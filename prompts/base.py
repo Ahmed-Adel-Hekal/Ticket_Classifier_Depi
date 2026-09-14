@@ -4,27 +4,10 @@ def build_prompt(
     user_input: str,
     constraints: list[str] | None = None,
 ) -> str:
-
-    constraints_text = ""
-
-    if constraints:
-        constraints_text = "\n".join(
-            f"- {item}"
-            for item in constraints
-        )
-
-    return f"""
-            Role:
-            {role}
-
-            Constraints:
-            {constraints_text}
-
-            Task:
-            {task}
-
-            Input:
-            <input>
-            {user_input}
-            </input>
-                """.strip()
+    constraints_text = "\n".join(f"- {item}" for item in (constraints or []))
+    return (
+        f"Role:\n{role}\n\n"
+        f"Constraints:\n{constraints_text}\n\n"
+        f"Task:\n{task}\n\n"
+        f"Input:\n<input>\n{user_input}\n</input>"
+    )
